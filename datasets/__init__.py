@@ -9,6 +9,7 @@ from torchvision.datasets import CIFAR10, LSUN
 
 from datasets.celeba import CelebA
 from datasets.ffhq import FFHQ
+from datasets.custom import StyleGAN2_ADA_PyTorch
 from datasets.stackedmnist import Stacked_MNIST
 
 
@@ -94,6 +95,25 @@ def get_dataset(d_config, data_folder):
         path = os.path.join(data_folder, 'FFHQ')
         dataset = FFHQ(path, transform=train_transform, resolution=d_config.image_size)
         test_dataset = FFHQ(path, transform=test_transform, resolution=d_config.image_size)
+
+        num_items = len(dataset)
+        indices = list(range(num_items))
+        random_state = np.random.get_state()
+        np.random.seed(2019)
+        np.random.shuffle(indices)
+        np.random.set_state(random_state)
+        train_indices, test_indices = indices[:int(num_items * 0.9)], indices[int(num_items * 0.9):]
+        dataset = Subset(dataset, train_indices)
+        test_dataset = Subset(test_dataset, test_indices)
+
+    elif d_config.dataset == "custom":
+
+        train_transform = transforms.Compose([transforms.ToTensor()])
+        test_transform = transforms.Compose([transforms.ToTensor()])
+
+        path = os.path.join(data_folder, 'set_128x128')
+        dataset = StyleGAN2_ADA_PyTorch(path, transform=train_transform)
+        test_dataset = StyleGAN2_ADA_PyTorch(path, transform=test_transform)
 
         num_items = len(dataset)
         indices = list(range(num_items))
